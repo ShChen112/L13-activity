@@ -1,43 +1,40 @@
 on: push
 
 jobs:
-    build: #name of job 1
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@v4
-
-            - name: Build index.html file
-              run: python build.py
-            
-            - name: Upload built files
-              uses: actions/upload-pages-artifact@v3
-              with: 
-                path: out/
-
-    
-    deploy: #name of job 2
-        runs-on: ubuntu-latest
-        environment: 
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        needs: build #match with job1
-        permissions: 
-            pages: write
-            id-token: write
-        steps: 
-            - name: Deploy to GitHub pages
-              uses: actions/deploy-pages@v4
-
-on: push
-
-permissions: {}
-
-jobs:
-  build:
-    name: Lint
+  build: # Name of Job 1
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build index.html file
+        run: python build.py
+
+      - name: Upload built files
+        uses: actions/upload-pages-artifact@v3
+        with: 
+          path: out/  # Path to your built files
+
+  deploy: # Name of Job 2
+    runs-on: ubuntu-latest
+    environment: 
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }} # Fixed reference to deploy step
+    needs: build  # Ensure deploy job runs after build job
+    permissions:
+      pages: write
+      id-token: write
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+  lint: # Name of Job 3 for linting
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -47,9 +44,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Needed for super-linter to access full commit history
 
-      - name: Super-linter
-        uses: super-linter/super-linter@v7.2.0 
+      - name: Super Linter
+        uses: super-linter/super-linter@v7.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for GitHub Actions status checks
